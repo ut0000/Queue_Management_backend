@@ -1,0 +1,24 @@
+{
+  "name": "jklu-q-wait",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/M0hitSingh/Jklu-Q-wait.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/M0hitSingh/Jklu-Q-wait/issues"
+  },
+  "homepage": "https://github.com/M0hitSingh/Jklu-Q-wait#readme",
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "mongoose": "^6.5.2"
+  }
+}
