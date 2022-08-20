@@ -1,6 +1,37 @@
+const path = require('path');
+const csvtojson = require('csvtojson')
+const User = require("../models/users");
 const stores = require("../models/stores");
 const shop = require("../models/shops");
 var mongoose = require('mongoose');
+const users = require("../models/users");
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = require('twilio')(accountSid, authToken);
+const dotenv = require("dotenv");
+
+exports.checkstore = async (req , res ,next )=>{
+    try{
+        const userid = req.body.userid;
+        console.log(userid);
+        const result  = await  stores.findById(userid);
+        console.log(result)
+        if(result.shopid){
+            const doc = await shop.findById(result.shopid);
+            console.log(doc)
+            res.json(doc);
+        }
+        else{
+            res.status(301).json('not found');
+        }
+    }
+    catch(err){
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+}
 exports.makestore = async (req,res,next)=>{
     try{
         mongoose.Types.ObjectId.isValid(req.params.id);
@@ -61,6 +92,11 @@ exports.adduser = async ( req,res,next)=>{
             console.log('no shop exist');
         }
         else{
+            ans = await users.findById(userid);
+            if(!ans){
+                console.log('no user exist')
+                return res.json("no user exist");
+            }
             var mini = result.ShopCounter[0]*result.avgtime[0];
             var counter = 0 , i;
             let tt = 1;
@@ -83,13 +119,14 @@ exports.adduser = async ( req,res,next)=>{
             }
             result.ShopCounter[counter]++;
             var pos =  result.ShopCounter[counter]
-            ans = await users.findById(userid);
-            if(!ans){
-                console.log('no user exist')
-                return res.json("no user exist");
-            }
             result.queue.push({_id:userid,counter,time,pos});
             await result.save();
+            client.messages.create({
+                body:`We Have Assigned You Counter No ${counter+1}, Your waiting time ${mini}min .And your current postion is ${pos}  ^_^`,
+                from:"+12136422814",
+                to:`+91${ans.mobileno}`
+            }).then(message=>console.log('message send'))
+            .catch(err=>console.log(err))
             res.json({counter:counter});
         }
     }
@@ -149,6 +186,38 @@ exports.removeuser = async (req,res,next)=>{
             }
             res.status(201).json('user removed');
         }
+    }
+    catch(err){
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+}
+exports.nearby = async (req,res,next)=>{
+    try{
+        const long = req.body.long;
+        const latti = req.body.latti;
+        const result = await shop.find();
+        var arr=[];
+        for(var i = 0 ; i <  result.length ;i++){
+            arr.push({dist:Math.abs(long-result[i].long )+ Math.abs(latti - result[i].latti) , shop:result[i]});
+        }
+        arr.sort((a,b) => (a.dist > b.dist) ? 1 : ((b.dist > a.dist) ? -1 : 0))
+        res.status(201).json(arr);
+    }
+    catch(err){
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+}
+exports.details = async (req,res,next)=>{
+    try{
+        const shopid = req.params.id;
+        result = await shop.findById(shopid);
+        res.status(201).json(result);
     }
     catch(err){
         if (!err.statusCode) {
