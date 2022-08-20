@@ -100,3 +100,60 @@ exports.adduser = async ( req,res,next)=>{
         next(err);
     }
 }
+exports.removeuser = async (req,res,next)=>{
+    try{
+        const shopid = req.body.shopid;
+        let userid = req.body.userid;
+        const counter = req.body.counter-1;
+        let time = req.body.time;
+        result = await shop.findOne({_id:shopid});
+        if(!result){
+            res.json('no shop exist');
+            console.log('no shop exist');
+        }
+        else{
+            if(result.countertime[counter]==0){
+                result.countertime[counter] = time;
+                await result.save();
+            }
+            else{
+                if(result.avgtime[counter]==0){
+                    result.avgtime[counter] = time - result.countertime[counter];
+                    await result.save();
+                }else{
+                    result.avgtime[counter] = (result.avgtime[counter] + (time - result.countertime[counter]))/2
+                }
+                result.countertime[counter] = time;
+                await result.save();
+            }
+            // console.log(result.queue.length);
+            if(result.queue.length){
+                for(var i = 0; i < result.queue.length; i++){
+                    if(result.queue[i].counter == counter){
+                        if(userid==0){
+                            userid = result.queue[i]._id
+                        }
+                        await shop.updateOne(
+                            {_id:shopid},
+                            {$pull:{
+                                queue:{_id:userid}
+                                }
+                            },
+                            {safe:true}
+                            )
+                        result.ShopCounter[counter]--;
+                        await result.save();
+                        break;
+                    }
+                }
+            }
+            res.status(201).json('user removed');
+        }
+    }
+    catch(err){
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+}
