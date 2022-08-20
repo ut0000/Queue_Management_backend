@@ -9,5 +9,6 @@ router.post('/removeuser',storeController.removeuser);
 router.post('/nearby',storeController.nearby);
 router.get("/details/:id",storeController.details);
 router.post("/checkstore",storeController.checkstore);
+router.post("/joinedqueue",storeController.joinedqueue);
 
 module.exports=router; 

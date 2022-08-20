@@ -226,3 +226,27 @@ exports.details = async (req,res,next)=>{
         next(err);
     }
 }
+exports.joinedqueue = async(req,res,next)=>{
+    try{
+        const userid = req.body.userid;
+        result = await shop.find();
+        console.log(result.length);
+        var arr=[];
+        for(var i = 0 ; i < result.length ; i++){
+            for(var j = 0 ; j < result[i].queue.length ; j++){
+                if(result[i].queue[j]._id== userid){
+                    var cnt = result[i].queue[j].counter;
+                    var po = result[i].queue[j].pos;
+                    arr.push({_id:result[i]._id ,timeleft:(result[i].queue[j].time + po*result[i].avgtime[cnt]),counter:result[i].queue[j].counter});
+                }
+            }
+        }
+        res.status(201).json(arr);
+    }
+    catch(err){
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+}
