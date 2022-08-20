@@ -94,6 +94,52 @@ exports.otpVerification = async (req, res, next) => {
   }
 }
 
+exports.details = async (req,res , next)=>{
+  try{
+    const {email , password , fullname  , mobileno , gender , role } = req.body;
+    const IsUser = await User.find({email:email});
+    const IsStore = await Store.find({email:email});
+    console.log(IsStore);
+    console.log(IsUser);
+    if(role){
+      if(IsUser.length) return res.status(301).json("already exist")
+    } 
+    else{
+      if(IsStore.length) return res.status(301).json("already exist")
+    }
+    const hashedPassword = await bcrypt.hash(password, 12);
+      let newUser;
+      if (role == false)
+      {
+          newUser = new Store({
+              email: email,
+              password: hashedPassword,
+              fullname:fullname,
+              mobileno:mobileno,
+              gender:gender
+            })
+            await newUser.save();
+    }
+    else
+    {
+      newUser = new User({
+        email: email,
+        password: hashedPassword,
+        fullname:fullname,
+        mobileno:mobileno,
+        gender:gender
+    });
+  }
+    await newUser.save();
+    return res.status(201).json(newUser);
+  }
+  catch(err){
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+}
 
 
 
