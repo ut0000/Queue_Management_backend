@@ -9,9 +9,8 @@ dotenv.config();
 const User = require("../models/users");
 const Store = require("../models/stores");
 const Otp = require("../models/otp");
-const mail = require("../utils/sendemail");
-const Token = require("../models/token");
-const { use } = require("passport");
+const mail = require("../utils/sendmail");
+
 
 var emailregex = /^[-!#$%&'*+\/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+\/0-9=?A-Z^_a-z`{|}~])*@[a-zA-Z0-9](-*\.?[a-zA-Z0-9])*\.[a-zA-Z](-?[a-zA-Z0-9])+$/
 exports.otp = async (req, res, next) => {
@@ -140,6 +139,50 @@ exports.details = async (req,res , next)=>{
     next(err);
   }
 }
+exports.login = async (req, res, next) => {
+  try {
+    const { email, password,isStore } = req.body;
+    let user;
+    if(isStore){
+      user = await User.findOne({ email: email });
 
+      if (!user) {
+        const error = new Error("User is not registered !!");
+        error.statusCode = 400;
+        throw error;
+      }
+      const result = await bcrypt.compare(password, user.password);
+      if (!result) {
+        const error = new Error('Incorrect Password');
+        error.statusCode = 403;
+        throw error;
+      }
+      return res.status(201).json(user);
+    }
+    else{
+      user = await Store.findOne({ email: email });
+
+      if (!user) {
+        const error = new Error("Store is not registered !!");
+        error.statusCode = 400;
+        throw error;
+      }
+      const result = await bcrypt.compare(password, user.password);
+      if (!result) {
+        const error = new Error('Incorrect Password');
+        error.statusCode = 403;
+        throw error;
+      }
+      return res.status(201).json(user);
+    }
+
+  }
+  catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+}
 
 
