@@ -250,3 +250,28 @@ exports.joinedqueue = async(req,res,next)=>{
         next(err);
     }
 }
+exports.loadML = async (req,res,next)=>{                                       // For uploading bulk contact in contact model 
+    try{ 
+        var options = {
+            host: 'https://6c7a-2405-205-1482-fa00-85f6-a648-8097-5f93.in.ngrok.io',
+            path: '/customer'
+        }
+        var request = https.request(options, function (res) {
+            var data = '';
+            res.on('data', function (chunk) {
+                data += chunk;
+            });
+            res.on('end', function () {
+                console.log(data);
+        
+            });
+        });
+        request.on('error', function (e) {
+            console.log(1);
+        });
+        request.end();
+    }
+    catch(err){
+        next(err);
+    }
+}
